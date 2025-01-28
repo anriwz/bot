@@ -1,26 +1,16 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import telebot
-from telebot import types # для указание типов
-import config
+import telebot 
+from telebot import types
 
-# Определите функцию обработчика команды
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text('Привет! Я твой бот. Давай помогу решить задачу по:')
+bot = telebot.Telebot('7529769115:AAGYwZ-EguZdAI7MwcWg3kjDWLOAEPTxO98')
 
-# Основная функция для запуска бота
-def main() -> None:
-    # Используйте ApplicationBuilder вместо Updater
-    application = ApplicationBuilder().token("7529769115:AAGYwZ-EguZdAI7MwcWg3kjDWLOAEPTxO98").build()
+@bot.message_handler(commands = ['start'])
+def start(message):
+    markup = types.InlineKeyboardMarkup(row_width = 1)
+    item1 = types.InlineKeyboardButton('Физика',callback_data = 'q1')
+    item2 = types.InlineKeyboardButton('Математика',callback_data = 'q2')
+    markup.add(item1,item2)
 
-    # Зарегистрируйте обработчик команды для команды /start
-    application.add_handler(CommandHandler("start", start))
+    bot.send_message(message.chat.id,'Привет! Я твой бот. Давай помогу решить задачу по:',reply_markup = markup)
 
-    # Запустите бота
-    application.run_polling()
-
-
-if __name__ == '__main__':
-    main()
-
+bot.polling()
 
