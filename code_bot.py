@@ -1,5 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
+
 
 # Определите функцию обработчика команды
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -41,11 +42,27 @@ async def show_additional_buttons(query) -> None:
 async def extra_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()  # Подтверждаем взаимодействие с кнопкой
+    # Сохраняем выбор пользователя
+    context.user_data['user_choice'] = query.data
 
     if query.data == 'photo':
         await query.edit_message_text(text="Отправьте фото задачи:")
     elif query.data == 'text':
         await query.edit_message_text(text="Отправьте текст задачи:")
+
+# Обработка текстового ввода
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_text = update.message.text
+    await update.message.reply_text("Хм... дай подумать")
+
+#  Обработка отправки фото
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Получаем файл фото
+    photo_file = update.message.photo[-1].get_file() 
+    # Сохранение фото
+    file_path = f'photo_{update.message.chat.id}.jpg'
+    await photo_file.download(file_path)  # Используем await
+    await update.message.reply_text("Хм... дай подумать")
 
 # Основная функция для запуска бота
 def main() -> None:
@@ -56,13 +73,13 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(button_handler, pattern='math|physics'))  # Обработчик для выбора предметов
     application.add_handler(CallbackQueryHandler(extra_button_handler, pattern='photo|text'))  # Обработчик для дополнительных кнопок
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     # Запустите бота
     application.run_polling()
 
 if __name__ == '__main__':
     main()
-
-
 
 
